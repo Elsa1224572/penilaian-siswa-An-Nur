@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login Guru</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(to bottom, #001f4d, #003366);
+    }
+
+    .login-card {
+      background: #0a1f44;
+      border-radius: 12px;
+      padding: 40px 30px;
+      width: 320px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .login-card h2 {
+      margin-bottom: 25px;
+      font-size: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #999;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #error {
+      color: #ff4d4d;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <p id="error"></p>
+    
+    <!-- Tambahkan ini di bawah -->
+    <p style="margin-top: 10px; font-size: 13px;">
+      Belum punya akun? <a href="register.html" style="color: #00bfff;">Daftar di sini</a>
+    </p>
+  </div>
+  <script>
+    function login() {
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  const accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
+
+  const found = accounts.find(acc => acc.email === user && acc.password === pass);
+
+  if (found) {
+    localStorage.setItem("login", "true");
+    localStorage.setItem("user", user);
+    window.location.href = "dashboard.html";
+  } else {
+    document.getElementById("error").innerText = "Email atau password salah!";
+  }
+}
+
+  </script>
+</body>
+</html>

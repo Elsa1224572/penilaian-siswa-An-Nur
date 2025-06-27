@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Penilaian Siswa</title>
+  <style>
+    body {
+      font-family: Calibri, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 1200px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    td, th {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      border: none;
+      background-color: transparent;
+      text-align: center;
+      padding: 4px;
+    }
+    thead tr:first-child th:nth-child(2),
+    tbody td:nth-child(2) {
+      min-width: 180px;
+      text-align: left;
+    }
+    td:nth-child(n+3):nth-child(-n+15),
+    th:nth-child(n+3):nth-child(-n+15) {
+      min-width: 80px;
+    }
+    td:nth-child(16), td:nth-child(17), td:nth-child(18),
+    th:nth-child(16), th:nth-child(17), th:nth-child(18) {
+      width: 90px;
+    }
+    td:nth-child(19), th:nth-child(19) {
+      width: 100px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    button.logout {
+      background-color: #d9534f;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .top-info {
+      display: flex;
+      justify-content: flex-start;
+      gap: 20px;
+      margin-bottom: -10px;
+    }
+    .top-info label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .top-info input {
+      border: 1px solid #ccc;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="top-info">
+      <div>
+        <label for="guru">Nama Guru:</label>
+        <input type="text" id="guru" placeholder="Masukkan nama guru" oninput="saveInfo()" />
+      </div>
+      <div>
+        <label for="mapel">Mata Pelajaran:</label>
+        <input type="text" id="mapel" placeholder="Masukkan mata pelajaran" oninput="saveInfo()" />
+      </div>
+    </div>
+
+    <table id="nilaiTable">
+      <thead>
+        <tr>
+          <th rowspan="2">NO</th><th rowspan="2">NAMA</th>
+          <th colspan="5">PENGETAHUAN</th><th rowspan="2">UTS</th><th rowspan="2">UAS</th>
+          <th colspan="5">KETERAMPILAN</th><th rowspan="2">KKM</th>
+          <th rowspan="2">RATA2 PENGETAHUAN</th><th rowspan="2">RATA2 KETERAMPILAN</th><th rowspan="2">NILAI AKHIR</th><th rowspan="2">NILAI HURUF</th>
+          <th rowspan="2">AKSI</th>
+        </tr>
+        <tr>
+          <th>KD1</th><th>KD2</th><th>KD3</th><th>KD4</th><th>KD5</th>
+          <th>KD1</th><th>KD2</th><th>KD3</th><th>KD4</th><th>KD5</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="controls">
+      <button onclick="addRow()">Tambah Siswa</button>
+      <button onclick="save()">Simpan</button>
+      <button onclick="exportExcel()">Export Excel</button>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    if (!localStorage.getItem("login")) window.location.href = "index.html";
+
+    const currentUser = localStorage.getItem("user");
+    const tableBody = document.getElementById("tableBody");
+
+    function addRow() {
+      const row = document.createElement("tr");
+      const cols = [
+        "text", "text", "number", "number", "number", "number", "number",
+        "number", "number", "number", "number", "number", "number", "number", "number",
+        "readonly", "readonly", "readonly", "readonly"
+      ];
+
+      for (let i = 0; i < cols.length; i++) {
+        const cell = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = cols[i];
+        if (cols[i] === "readonly") input.readOnly = true;
+        input.oninput = calculate;
+        cell.appendChild(input);
+        row.appendChild(cell);
+      }
+
+      row.cells[0].querySelector("input").value = tableBody.rows.length + 1;
+
+      const actionCell = document.createElement("td");
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "Hapus";
+      deleteButton.className = "delete-btn";
+      deleteButton.onclick = function () {
+        row.remove();
+        updateRowNumbers();
+        calculate();
+      };
+      actionCell.appendChild(deleteButton);
+      row.appendChild(actionCell);
+
+      tableBody.appendChild(row);
+    }
+
+    function calculate() {
+      for (let row of tableBody.rows) {
+        const vals = i => parseFloat(row.cells[i].querySelector("input").value) || 0;
+        const avgPengetahuan = [2,3,4,5,6].map(vals).reduce((a,b)=>a+b)/5;
+        const avgKeterampilan = [9,10,11,12,13].map(vals).reduce((a,b)=>a+b)/5;
+        const nilaiAkhir = ((avgPengetahuan + avgKeterampilan + vals(7) + vals(8)) / 4).toFixed(2);
+
+        row.cells[15].querySelector("input").value = avgPengetahuan.toFixed(2);
+        row.cells[16].querySelector("input").value = avgKeterampilan.toFixed(2);
+        row.cells[17].querySelector("input").value = nilaiAkhir;
+
+        const hurufCell = row.cells[18].querySelector("input");
+        const na = parseFloat(nilaiAkhir);
+        let huruf = "E";
+        if (na >= 90) huruf = "A";
+        else if (na >= 80) huruf = "B";
+        else if (na >= 70) huruf = "C";
+        else if (na >= 60) huruf = "D";
+        hurufCell.value = huruf;
+      }
+    }
+
+    function updateRowNumbers() {
+      Array.from(tableBody.rows).forEach((row, index) => {
+        row.cells[0].querySelector("input").value = index + 1;
+      });
+    }
+
+    function save() {
+      const data = [];
+      for (let row of tableBody.rows) {
+        const rowData = [];
+        for (let i = 0; i < 19; i++) {
+          rowData.push(row.cells[i].querySelector("input").value);
+        }
+        data.push(rowData);
+      }
+      localStorage.setItem("nilaiData_" + currentUser, JSON.stringify(data));
+      saveInfo();
+      alert("Data disimpan di browser!");
+    }
+
+    function saveInfo() {
+      const guru = document.getElementById("guru").value;
+      const mapel = document.getElementById("mapel").value;
+      localStorage.setItem("infoGuru_" + currentUser, JSON.stringify({ guru, mapel }));
+    }
+
+    function loadInfo() {
+      const info = JSON.parse(localStorage.getItem("infoGuru_" + currentUser) || "{}");
+      document.getElementById("guru").value = info.guru || "";
+      document.getElementById("mapel").value = info.mapel || "";
+    }
+
+    function loadData() {
+      const data = JSON.parse(localStorage.getItem("nilaiData_" + currentUser) || "[]");
+      for (let d of data) {
+        addRow();
+        const lastRow = tableBody.rows[tableBody.rows.length - 1];
+        d.forEach((val, i) => lastRow.cells[i].querySelector("input").value = val);
+      }
+      calculate();
+      updateRowNumbers();
+      loadInfo();
+    }
+
+    function logout() {
+      localStorage.removeItem("login");
+      window.location.href = "index.html";
+    }
+
+    function exportExcel() {
+      const wb = XLSX.utils.book_new();
+      const ws_data = [];
+      const header = ["NO", "NAMA", "KD1", "KD2", "KD3", "KD4", "KD5", "UTS", "UAS", "KD1_KTR", "KD2_KTR", "KD3_KTR", "KD4_KTR", "KD5_KTR", "KKM", "RATA2_PENGETAHUAN", "RATA2_KETERAMPILAN", "NILAI_AKHIR", "NILAI_HURUF"];
+      ws_data.push(header);
+
+      for (let row of tableBody.rows) {
+        const rowData = [];
+        for (let i = 0; i < 19; i++) {
+          rowData.push(row.cells[i].querySelector("input").value);
+        }
+        ws_data.push(rowData);
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, "Nilai Siswa");
+      XLSX.writeFile(wb, "data_nilai_siswa.xlsx");
+    }
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>

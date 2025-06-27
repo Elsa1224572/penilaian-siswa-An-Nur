@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registrasi</title>
+  <style>
+    body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(to bottom, #004080, #001f4d);
+  padding: 20px;
+}
+
+    .register-card {
+  background: #0a1f44;
+  border-radius: 12px;
+  padding: 40px 45px;
+  width: 340px; 
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  text-align: center;
+}
+
+
+
+    .register-card h2 {
+      margin-bottom: 25px;
+      font-size: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    button {
+  width: 200px; 
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0 auto;
+  display: block;
+}
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    #error {
+      color: #ff4d4d;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-card">
+    <h2>Registrasi</h2>
+    <input type="text" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <input type="password" id="confirm" placeholder="Ulangi Password" />
+    <button onclick="register()">Daftar</button>
+    <p id="error"></p>
+  </div>
+
+  <script>
+    function register() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm").value;
+  const error = document.getElementById("error");
+
+  if (!email || !password || !confirm) {
+    error.innerText = "Semua kolom wajib diisi!";
+    return;
+  }
+
+  if (password !== confirm) {
+    error.innerText = "Password tidak cocok!";
+    return;
+  }
+
+  // Ambil akun yang sudah ada
+  let accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
+
+  // Cek apakah email sudah terdaftar
+  if (accounts.find(acc => acc.email === email)) {
+    error.innerText = "Email sudah terdaftar!";
+    return;
+  }
+
+  // Tambahkan akun baru
+  accounts.push({ email, password });
+  localStorage.setItem("accounts", JSON.stringify(accounts));
+  alert("Registrasi berhasil! Silakan login.");
+  window.location.href = "index.html";
+}
+
+  </script>
+</body>
+</html>
